@@ -1,0 +1,17 @@
+{
+  "setupFilesAfterEnv": [
+    "./src/setupTests.ts"
+  ],
+  "moduleNameMapper": {
+    "^~/(.*)$": "<rootDir>/src/$1",
+    "^config$": "<rootDir>/configs/config.test.ts"
+  },
+  "testMatch": [
+    "**/*.spec.{ts,tsx}"
+  ],
+  "globals": {
+    "globals": {
+      "ethereum": {}
+    }
+  }
+}
