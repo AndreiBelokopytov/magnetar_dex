@@ -27,5 +27,10 @@ export const WalletButton = observer(() => {
       </Button>
     );
   }
-  return <MetaMaskButton onConnect={handleMetaMaskConnect} />;
+  return (
+    <MetaMaskButton
+      title={"Connect wallet"}
+      onConnect={handleMetaMaskConnect}
+    />
+  );
 });

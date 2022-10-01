@@ -3,10 +3,11 @@ import { MetaMaskOnboardingStatus, useMetaMask } from "web3-toolkit";
 import { Button } from "@chakra-ui/react";
 
 type Props = {
+  title: string;
   onConnect?: (addresses: string[]) => void;
 };
 
-export const MetaMaskButton = ({ onConnect }: Props) => {
+export const MetaMaskButton = ({ title, onConnect }: Props) => {
   const { onboardingState, connect } = useMetaMask();
 
   const isMetaMaskConnected =
@@ -24,13 +25,11 @@ export const MetaMaskButton = ({ onConnect }: Props) => {
 
   return (
     <Button
-      colorScheme={"blue"}
-      variant="solid"
       isLoading={isMetaMaskLoading}
       loadingText="Connecting"
       onClick={connect}
     >
-      Connect
+      {title}
     </Button>
   );
 };
