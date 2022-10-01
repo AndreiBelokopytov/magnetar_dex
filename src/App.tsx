@@ -1,24 +1,21 @@
-import { ChakraProvider } from "@chakra-ui/react";
-import styled from "styled-components";
+import { ChakraProvider, Container, Center, Box } from "@chakra-ui/react";
+import { ExchangeForm } from "./features/exchange";
 import { WalletButton } from "./features/wallet";
-
-const AppHeader = styled.div`
-  display: flex;
-  width: 100%;
-  padding: 16px;
-`;
-
-const Spacer = styled.div`
-  flex: 1;
-`;
+import { starshipTheme } from "./theme";
 
 export const App = () => {
   return (
-    <ChakraProvider>
-      <AppHeader>
-        <Spacer />
-        <WalletButton />
-      </AppHeader>
+    <ChakraProvider theme={starshipTheme}>
+      <Container maxW={"392px"}>
+        <Box pt={4} pb={4}>
+          <Center>
+            <WalletButton />
+          </Center>
+        </Box>
+        <Box pt={8}>
+          <ExchangeForm />
+        </Box>
+      </Container>
     </ChakraProvider>
   );
 };

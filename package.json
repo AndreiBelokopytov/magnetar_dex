@@ -7,6 +7,7 @@
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
     "framer-motion": "^7.3.3",
+    "imask": "^6.4.3",
     "lodash": "^4.17.21",
     "mobx": "^6.6.1",
     "mobx-react": "^7.5.2",
@@ -14,6 +15,7 @@
     "react-dom": "^18.2.0",
     "reflect-metadata": "^0.1.13",
     "styled-components": "^5.3.5",
+    "synthetix-data": "^2.1.43",
     "tsyringe": "^4.7.0",
     "typescript": "^4.4.2",
     "web3-toolkit": "git+https://github.com/AndreiBelokopytov/web3-toolkit.git#v0.1.1"
