@@ -6,6 +6,9 @@
     "@chakra-ui/react": "^2.3.2",
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
+    "@synthetixio/assets": "^2.0.13",
+    "@synthetixio/contracts-interface": "^2.76.3",
+    "ethers": "^5.7.1",
     "framer-motion": "^7.3.3",
     "imask": "^6.4.3",
     "lodash": "^4.17.21",
@@ -15,6 +18,7 @@
     "react-dom": "^18.2.0",
     "reflect-metadata": "^0.1.13",
     "styled-components": "^5.3.5",
+    "synthetix": "^2.77.0-alpha",
     "synthetix-data": "^2.1.43",
     "tsyringe": "^4.7.0",
     "typescript": "^4.4.2",
@@ -23,7 +27,8 @@
   "scripts": {
     "start": "webpack-dev-server --open --config ./webpack/webpack.dev.js",
     "build": "webpack --config ./webpack/webpack.prod.js",
-    "test": "jest --watch --env=jsdom"
+    "test": "jest --watch --env=jsdom",
+    "postinstall": "cp -R node_modules/@synthetixio/assets/synths public/synths"
   },
   "devDependencies": {
     "@babel/core": "^7.19.0",

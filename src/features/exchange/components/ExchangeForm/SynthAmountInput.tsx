@@ -1,9 +1,19 @@
 import { useRef } from "react";
-import { Input, Text } from "@chakra-ui/react";
+import {
+  Avatar,
+  Button,
+  Flex,
+  Input,
+  InputGroup,
+  InputRightElement,
+  Text,
+} from "@chakra-ui/react";
 import { useIMask } from "../../../../shared";
+import { SynthWithLogo } from "../../stores";
 
 type Props = React.ComponentProps<typeof Input> & {
-  label?: string;
+  synth: SynthWithLogo;
+  balance?: string;
 };
 
 const PLACEHOLDER_SETTINGS = {
@@ -11,22 +21,36 @@ const PLACEHOLDER_SETTINGS = {
   color: "text.500",
 };
 
-export const SynthAmountInput = ({ label, ...rest }: Props) => {
+export const SynthAmountInput = ({ balance, synth, ...rest }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   useIMask(inputRef);
+
   return (
     <label>
-      {label && (
-        <Text fontSize={"sm"} color={"text.500"} pb={2}>
-          {label}
-        </Text>
+      {balance && (
+        <Flex flexDir={"row"} mb={2}>
+          <Text fontSize={"sm"} color={"gray.400"} mr={2}>
+            Available:
+          </Text>
+          <Text fontSize={"sm"}>{balance}</Text>
+        </Flex>
       )}
-      <Input
-        placeholder="0.0000"
-        _placeholder={PLACEHOLDER_SETTINGS}
-        {...rest}
-        ref={inputRef}
-      />
+
+      <InputGroup>
+        <InputRightElement width={24} justifyContent={"flex-end"} pr={1}>
+          <Button size="sm" colorScheme={"gray"}>
+            <Avatar size={"xs"} name={synth.name} src={synth.logoUrl} mr={2} />
+            {synth.name}
+          </Button>
+        </InputRightElement>
+        <Input
+          pr={2}
+          placeholder="0.0000"
+          _placeholder={PLACEHOLDER_SETTINGS}
+          {...rest}
+          ref={inputRef}
+        />
+      </InputGroup>
     </label>
   );
 };
