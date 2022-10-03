@@ -1,5 +1,7 @@
 import { Config } from "./config.types";
 
-const config: Config = {};
+const config: Config = {
+  network: "goerli",
+};
 
 export default config;

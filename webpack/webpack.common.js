@@ -21,6 +21,12 @@ module.exports = {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+    alias: {
+      config:
+        process.env.NODE_ENV === "production"
+          ? path.resolve(__dirname, "../configs/config.prod")
+          : path.resolve(__dirname, "../configs/config"),
+    },
   },
   module: {
     rules: [
