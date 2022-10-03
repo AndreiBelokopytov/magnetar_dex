@@ -1,10 +1,10 @@
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, runInAction } from "mobx";
 import { inject, injectable } from "tsyringe";
 import { SynthWithLogo, SynthsStore } from "../../stores";
 import { SynthsService } from "../../services";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, ethers, FixedNumber } from "ethers";
 import { WalletStore } from "../../../wallet/stores";
-import { formatEther, parseEther } from "ethers/lib/utils";
+import { formatEther } from "ethers/lib/utils";
 
 const DEFAULT_SYNTH_FROM = "sUSD";
 const DEFAULT_SYNTH_TO = "sETH";
@@ -13,7 +13,7 @@ const DEFAULT_SYNTH_TO = "sETH";
 export class ExchangeFormVM {
   private _synthFrom?: SynthWithLogo;
   private _synthTo?: SynthWithLogo;
-  private _amountFrom = BigNumber.from(0);
+  private _amountFrom = "";
 
   get synthFrom(): SynthWithLogo | undefined {
     return this._synthFrom;
@@ -27,14 +27,14 @@ export class ExchangeFormVM {
     if (!this._synthFrom) {
       return undefined;
     }
-    return this._synthsService.getProxyForSynth(this._synthFrom);
+    return this._synthsService.getProxyContractForSynth(this._synthFrom);
   }
 
   get proxyContractTo(): ethers.Contract | undefined {
     if (!this._synthTo) {
       return undefined;
     }
-    return this._synthsService.getProxyForSynth(this._synthTo);
+    return this._synthsService.getProxyContractForSynth(this._synthTo);
   }
 
   get balanceFrom(): Promise<BigNumber> {
@@ -58,12 +58,14 @@ export class ExchangeFormVM {
     return this.halfBalanceFrom.then(formatEther);
   }
 
-  get amountFrom(): BigNumber {
+  get amountFrom(): string {
     return this._amountFrom;
   }
 
-  get amountFromFormatted(): string {
-    return formatEther(this.amountFrom);
+  get amountTo(): Promise<string> {
+    return this._calcAmountToExchange(this._amountFrom).then((amount) =>
+      amount ? formatEther(amount) : ""
+    );
   }
 
   constructor(
@@ -83,20 +85,41 @@ export class ExchangeFormVM {
 
   async init(): Promise<void> {
     await this._synthsService.fetchSynths();
-    this._synthFrom =
-      this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_FROM];
-    this._synthTo = this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_TO];
+    runInAction(() => {
+      this._synthFrom =
+        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_FROM];
+      this._synthTo = this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_TO];
+    });
   }
 
   setAmountFrom(value: string | BigNumber) {
-    try {
-      if (BigNumber.isBigNumber(value)) {
-        this._amountFrom = value;
-      } else {
-        this._amountFrom = parseEther(value);
+    if (BigNumber.isBigNumber(value)) {
+      try {
+        this._amountFrom = formatEther(value);
+      } catch {
+        this._amountFrom = "";
       }
-    } catch {
-      this._amountFrom = BigNumber.from(0);
     }
+    if (typeof value === "string") {
+      this._amountFrom = value;
+    }
+  }
+
+  private async _calcAmountToExchange(
+    amount: string
+  ): Promise<BigNumber | undefined> {
+    if (!this.synthTo) {
+      return undefined;
+    }
+    const exchangeRate = await this._synthsService.getExchangeRateForSynth(
+      this.synthTo
+    );
+    const fixedExchangeRate = FixedNumber.fromValue(exchangeRate, 18);
+    const fixedAmount = FixedNumber.from(amount);
+    if (fixedExchangeRate.isZero()) {
+      return BigNumber.from(0);
+    }
+    const result = fixedAmount.divUnsafe(fixedExchangeRate);
+    return BigNumber.from(result.toHexString());
   }
 }

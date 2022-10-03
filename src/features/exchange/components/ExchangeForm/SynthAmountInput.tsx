@@ -11,10 +11,11 @@ import {
 import { useIMask } from "../../../../shared";
 import { SynthWithLogo } from "../../stores";
 
-type Props = React.ComponentProps<typeof InputGroup> & {
+type Props = Omit<React.ComponentProps<typeof InputGroup>, "onChange"> & {
   synth: SynthWithLogo;
   balance?: string;
   value?: string;
+  readonly?: boolean;
   onChange?: (value: string) => void;
   onHalfButtonClick?: () => void;
   onMaxButtonClick?: () => void;
@@ -29,13 +30,14 @@ export const SynthAmountInput = ({
   balance,
   synth,
   value,
+  readonly,
   onChange,
   onHalfButtonClick,
   onMaxButtonClick,
   ...rest
 }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  useIMask(inputRef);
+  useIMask(inputRef, { scale: 18, value });
 
   const handleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) =>
@@ -92,6 +94,7 @@ export const SynthAmountInput = ({
           pr={2}
           placeholder="0.0000"
           _placeholder={PLACEHOLDER_SETTINGS}
+          readOnly={readonly}
           onChange={handleChange}
           ref={inputRef}
         />

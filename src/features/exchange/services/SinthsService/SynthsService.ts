@@ -1,7 +1,7 @@
 import { inject, singleton } from "tsyringe";
 import { Synth, SynthsStore } from "../../stores";
 import { Synthetix } from "../../providers";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 
 @singleton()
 export class SynthsService {
@@ -14,8 +14,14 @@ export class SynthsService {
     this._synthsStore.setSynths(this._synthetix.synths);
   }
 
-  getProxyForSynth(synth: Synth): ethers.Contract | undefined {
+  getProxyContractForSynth(synth: Synth): ethers.Contract | undefined {
     const contractName = `Proxys${synth.name.slice(1)}`;
     return this._synthetix.contracts[contractName];
+  }
+
+  async getExchangeRateForSynth(synth: Synth): Promise<BigNumber> {
+    return this._synthetix.contracts.ExchangeRates.rateForCurrency(
+      this._synthetix.toBytes32(synth.name)
+    );
   }
 }
