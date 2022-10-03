@@ -1,1 +1,1 @@
-export * from "./starship";
+export * from "./defaultTheme";
