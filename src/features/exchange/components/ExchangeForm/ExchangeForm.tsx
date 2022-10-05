@@ -1,46 +1,31 @@
 import { Box, Button, Text } from "@chakra-ui/react";
 import { observer } from "mobx-react";
-import {
-  useAsyncObservable,
-  useDebouncedCallback,
-  useInjectedInstance,
-} from "../../../../shared";
+import { useInjectedInstance } from "../../../../shared";
 import { ExchangeFormVM } from "./ExchangeForm.vm";
 import { SynthAmountInput } from "./SynthAmountInput";
 import { useCallback, useEffect } from "react";
 
-const AMOUNT_CHANGE_DEBOUNCE_TIME = 100;
-
 export const ExchangeForm = observer(() => {
   const vm = useInjectedInstance(ExchangeFormVM);
-
-  const balanceFrom = useAsyncObservable(vm.balanceFromFormatted);
-  const halfBalanceFrom = useAsyncObservable(vm.halfBalanceFrom);
-  const amountTo = useAsyncObservable(vm.amountTo);
 
   useEffect(() => {
     vm.init();
   }, [vm]);
 
   const handleMaxButtonClick = useCallback(() => {
-    if (balanceFrom) {
-      vm.setAmountFrom(balanceFrom);
-    }
-  }, [balanceFrom, vm]);
+    vm.setAmountFrom(vm.sourceBalance);
+  }, [vm]);
 
   const handleHalfButtonClick = useCallback(() => {
-    if (halfBalanceFrom) {
-      vm.setAmountFrom(halfBalanceFrom);
-    }
-  }, [halfBalanceFrom, vm]);
+    vm.setAmountFrom(vm.halvedSourceBalance);
+  }, [vm]);
 
-  const handleAmountFromChange = useDebouncedCallback(
+  const handleAmountFromChange = useCallback(
     (value: string) => vm.setAmountFrom(value),
-    AMOUNT_CHANGE_DEBOUNCE_TIME,
     [vm]
   );
 
-  if (!vm.synthFrom || !vm.synthTo) {
+  if (!vm.sourceSynth || !vm.destSynth) {
     return null;
   }
 
@@ -50,17 +35,27 @@ export const ExchangeForm = observer(() => {
         Exchange
       </Text>
       <SynthAmountInput
-        value={vm.amountFrom}
-        synth={vm.synthFrom}
-        balance={balanceFrom}
+        value={vm.sourceAmount}
+        synth={vm.sourceSynth}
+        balance={vm.formattedSourceBalance}
         onHalfButtonClick={handleHalfButtonClick}
         onMaxButtonClick={handleMaxButtonClick}
         onChange={handleAmountFromChange}
         mb={12}
       />
-      <SynthAmountInput synth={vm.synthTo} mb={12} value={amountTo} readonly />
-      <Button w="100%" colorScheme={"green"}>
-        Confirm
+      <SynthAmountInput
+        synth={vm.destSynth}
+        mb={12}
+        value={vm.destAmount}
+        readonly
+      />
+      <Button
+        w="100%"
+        colorScheme={"green"}
+        variant={"outline"}
+        disabled={!!vm.formError}
+      >
+        {vm.formError ?? "Confirm"}
       </Button>
     </Box>
   );
