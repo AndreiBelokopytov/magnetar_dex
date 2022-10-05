@@ -5,7 +5,7 @@ import { SynthsService } from "../../services";
 import { BigNumber, ethers, FixedNumber } from "ethers";
 import { WalletStore } from "../../../wallet/stores";
 import { formatEther } from "ethers/lib/utils";
-import { safeParseUnits } from "../../../../shared";
+import { getErrorMessage, safeParseUnits } from "../../../../shared";
 import { debounce } from "lodash";
 
 const DEFAULT_SYNTH_FROM = "sUSD";
@@ -22,6 +22,10 @@ export class ExchangeFormVM {
   private _sourceAmount = "";
   private _sourceExchangeRate?: BigNumber;
   private _destExchangeRate?: BigNumber;
+  private _isExchangeInProgress = false;
+
+  onExchangeError?: (message: string) => void;
+  onExchangeSuccess?: () => void;
 
   get sourceSynth(): SynthWithLogo | undefined {
     return this._sourceSynth;
@@ -91,6 +95,10 @@ export class ExchangeFormVM {
     }
   }
 
+  get isExchangeInProgress(): boolean {
+    return this._isExchangeInProgress;
+  }
+
   constructor(
     @inject(SynthsStore) private readonly _synthsStore: SynthsStore,
     @inject(WalletStore) private readonly _walletStore: WalletStore,
@@ -150,6 +158,34 @@ export class ExchangeFormVM {
     );
     runInAction(() => (this._sourceBalance = sourceBalance));
   }
+
+  exchange = async () => {
+    if (!this.sourceSynth || !this.destSynth) {
+      return;
+    }
+    if (this.formError) {
+      return;
+    }
+    this._isExchangeInProgress = true;
+    try {
+      await this._synthsService.exchangeSynths(
+        this.sourceSynth,
+        this.destSynth,
+        this.sourceAmountNumber
+      );
+
+      this.onExchangeSuccess?.();
+    } catch (err) {
+      const message = getErrorMessage(err);
+      if (message) {
+        this.onExchangeError?.(message);
+      }
+    } finally {
+      this._isExchangeInProgress = false;
+    }
+
+    await this.fetchSourceBalance();
+  };
 
   private async _refreshExchangeRates(): Promise<void> {
     if (!this.destSynth || !this.sourceSynth) {
