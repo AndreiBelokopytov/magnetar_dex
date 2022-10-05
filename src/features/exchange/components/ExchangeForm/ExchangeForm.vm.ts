@@ -20,7 +20,8 @@ export class ExchangeFormVM {
   private _destProxyContract?: ethers.Contract;
   private _sourceBalance?: BigNumber;
   private _sourceAmount = "";
-  private _exchangeRate?: BigNumber;
+  private _sourceExchangeRate?: BigNumber;
+  private _destExchangeRate?: BigNumber;
 
   get sourceSynth(): SynthWithLogo | undefined {
     return this._sourceSynth;
@@ -55,15 +56,24 @@ export class ExchangeFormVM {
   }
 
   get destAmountNumber(): BigNumber {
-    if (!this._exchangeRate) {
+    if (!this._sourceExchangeRate || !this._destExchangeRate) {
       return BigNumber.from(0);
     }
-    const fixedExchangeRate = FixedNumber.fromValue(this._exchangeRate, 18);
+    const fixedSourceExchangeRate = FixedNumber.fromValue(
+      this._sourceExchangeRate,
+      18
+    );
+    const fixedDestExchangeRate = FixedNumber.fromValue(
+      this._destExchangeRate,
+      18
+    );
     const fixedAmount = FixedNumber.fromValue(this.sourceAmountNumber, 18);
-    if (fixedExchangeRate.isZero()) {
+    if (fixedSourceExchangeRate.isZero()) {
       return BigNumber.from(0);
     }
-    const result = fixedAmount.divUnsafe(fixedExchangeRate);
+    const result = fixedAmount
+      .mulUnsafe(fixedSourceExchangeRate)
+      .divUnsafe(fixedDestExchangeRate);
     return BigNumber.from(result.toHexString());
   }
 
@@ -112,7 +122,7 @@ export class ExchangeFormVM {
     if (typeof value === "string") {
       this._sourceAmount = value;
     }
-    this._throttledRefreshExchangeRate();
+    this._throttledRefreshExchangeRates();
   }
 
   private async fetchSynths() {
@@ -141,18 +151,23 @@ export class ExchangeFormVM {
     runInAction(() => (this._sourceBalance = sourceBalance));
   }
 
-  private async _refreshExchangeRate(): Promise<void> {
-    if (!this.destSynth) {
+  private async _refreshExchangeRates(): Promise<void> {
+    if (!this.destSynth || !this.sourceSynth) {
       return;
     }
-    const exchangeRate = await this._synthsService.getExchangeRateForSynth(
+    const destExchangeRate = await this._synthsService.getExchangeRateForSynth(
       this.destSynth
     );
-    runInAction(() => (this._exchangeRate = exchangeRate));
+    const sourceExchangeRate =
+      await this._synthsService.getExchangeRateForSynth(this.sourceSynth);
+    runInAction(() => {
+      this._destExchangeRate = destExchangeRate;
+      this._sourceExchangeRate = sourceExchangeRate;
+    });
   }
 
-  private _throttledRefreshExchangeRate = debounce(
-    this._refreshExchangeRate,
+  private _throttledRefreshExchangeRates = debounce(
+    this._refreshExchangeRates,
     REFRESH_EXCHANGE_RATE_THROTTLE_TIME,
     {
       leading: true,
