@@ -1,21 +1,19 @@
 import { inject, singleton } from "tsyringe";
 import { Synth, SynthsStore } from "../../stores";
 import { Synthetix } from "../../providers";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, Contract, providers } from "ethers";
 
 @singleton()
 export class SynthsService {
-  private readonly _provider = new ethers.providers.Web3Provider(
-    window.ethereum
-  );
-  private readonly _synthetixContract: ethers.Contract;
+  private readonly _provider = new providers.Web3Provider(window.ethereum);
+  private readonly _synthetixContract: Contract;
 
   constructor(
     @inject(Synthetix) private readonly _synthetix: Synthetix,
     @inject(SynthsStore) private readonly _synthsStore: SynthsStore
   ) {
     const signer = this._provider.getSigner();
-    this._synthetixContract = new ethers.Contract(
+    this._synthetixContract = new Contract(
       this._synthetix.contracts.ProxySynthetix.address,
       this._synthetix.contracts.Synthetix.interface,
       signer
@@ -23,11 +21,17 @@ export class SynthsService {
   }
 
   async fetchSynths(): Promise<void> {
-    this._synthsStore.setSynths(this._synthetix.synths);
+    const synths = this._synthetix.synths
+      .map((synth) => ({
+        ...synth,
+        contract: this._getProxyContractBySynthName(synth.name),
+      }))
+      .filter((synth): synth is Synth => synth.contract !== undefined);
+    this._synthsStore.setSynths(synths);
   }
 
-  getProxyContractForSynth(synth: Synth): ethers.Contract | undefined {
-    const contractName = `Proxys${synth.name.slice(1)}`;
+  private _getProxyContractBySynthName(name: string): Contract | undefined {
+    const contractName = `Proxys${name.slice(1)}`;
     return this._synthetix.contracts[contractName];
   }
 

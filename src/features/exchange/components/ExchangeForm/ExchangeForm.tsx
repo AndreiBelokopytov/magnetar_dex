@@ -1,9 +1,12 @@
 import { Box, Button, Text, useToast } from "@chakra-ui/react";
 import { observer } from "mobx-react";
-import { useInjectedInstance } from "../../../../shared";
+import { useInjectedInstance, useInterval } from "../../../../shared";
 import { ExchangeFormVM } from "./ExchangeForm.vm";
 import { SynthAmountInput } from "./SynthAmountInput";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
+
+const REFRESH_EXCHANGE_RATES_INTERVAL = 2 * 60 * 1000;
+const REFRESH_BALANCE_INTERVAL = 60 * 1000;
 
 export const ExchangeForm = observer(() => {
   const toast = useToast();
@@ -29,18 +32,14 @@ export const ExchangeForm = observer(() => {
     vm.init();
   }, [vm]);
 
-  const handleMaxButtonClick = useCallback(() => {
-    vm.setAmountFrom(vm.sourceBalance);
-  }, [vm]);
-
-  const handleHalfButtonClick = useCallback(() => {
-    vm.setAmountFrom(vm.halvedSourceBalance);
-  }, [vm]);
-
-  const handleAmountFromChange = useCallback(
-    (value: string) => vm.setAmountFrom(value),
-    [vm]
-  );
+  useInterval(vm.fetchSourceBalance, {
+    time: REFRESH_BALANCE_INTERVAL,
+    fireImmediately: false,
+  });
+  useInterval(vm.fetchExchangeRates, {
+    time: REFRESH_EXCHANGE_RATES_INTERVAL,
+    fireImmediately: false,
+  });
 
   if (!vm.sourceSynth || !vm.destSynth) {
     return null;
@@ -55,10 +54,8 @@ export const ExchangeForm = observer(() => {
         <SynthAmountInput
           value={vm.sourceAmount}
           synth={vm.sourceSynth}
-          balance={vm.formattedSourceBalance}
-          onHalfButtonClick={handleHalfButtonClick}
-          onMaxButtonClick={handleMaxButtonClick}
-          onChange={handleAmountFromChange}
+          balance={vm.sourceBalance}
+          onChange={vm.setSourceAmount}
           mb={12}
         />
         <SynthAmountInput

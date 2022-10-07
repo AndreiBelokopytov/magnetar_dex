@@ -2,22 +2,18 @@ import { makeAutoObservable, runInAction } from "mobx";
 import { inject, injectable } from "tsyringe";
 import { SynthWithLogo, SynthsStore } from "../../stores";
 import { SynthsService } from "../../services";
-import { BigNumber, ethers, FixedNumber } from "ethers";
+import { BigNumber, FixedNumber } from "ethers";
 import { WalletStore } from "../../../wallet/stores";
 import { formatEther } from "ethers/lib/utils";
 import { getErrorMessage, safeParseUnits } from "../../../../shared";
-import { debounce } from "lodash";
 
 const DEFAULT_SYNTH_FROM = "sUSD";
 const DEFAULT_SYNTH_TO = "sETH";
-const REFRESH_EXCHANGE_RATE_THROTTLE_TIME = 30 * 1000;
 
 @injectable()
 export class ExchangeFormVM {
   private _sourceSynth?: SynthWithLogo;
   private _destSynth?: SynthWithLogo;
-  private _sourceProxyContract?: ethers.Contract;
-  private _destProxyContract?: ethers.Contract;
   private _sourceBalance?: BigNumber;
   private _sourceAmount = "";
   private _sourceExchangeRate?: BigNumber;
@@ -37,18 +33,6 @@ export class ExchangeFormVM {
 
   get sourceBalance(): BigNumber {
     return this._sourceBalance ?? BigNumber.from(0);
-  }
-
-  get halvedSourceBalance(): BigNumber {
-    return this.sourceBalance.div(2);
-  }
-
-  get formattedSourceBalance(): string {
-    return formatEther(this.sourceBalance);
-  }
-
-  get halvedFormattedSourceBalance(): string {
-    return formatEther(this.halvedSourceBalance);
   }
 
   get sourceAmount(): string {
@@ -106,60 +90,46 @@ export class ExchangeFormVM {
   ) {
     makeAutoObservable<
       ExchangeFormVM,
-      | "_synthsStore"
-      | "_walletStore"
-      | "_synthsService"
-      | "_calcDestAmountDebounced"
-    >(this, {
-      _synthsStore: false,
-      _walletStore: false,
-      _synthsService: false,
-      _calcDestAmountDebounced: false,
-    });
+      "_synthsStore" | "_walletStore" | "_synthsService"
+    >(
+      this,
+      {
+        _synthsStore: false,
+        _walletStore: false,
+        _synthsService: false,
+      },
+      {
+        autoBind: true,
+      }
+    );
   }
 
   async init(): Promise<void> {
-    await this.fetchSynths();
+    await this._fetchSynths();
     await this.fetchSourceBalance();
+    await this.fetchExchangeRates();
   }
 
-  setAmountFrom(value: string | BigNumber) {
+  setSourceAmount(value: string | BigNumber): void {
     if (BigNumber.isBigNumber(value)) {
       this._sourceAmount = formatEther(value);
     }
     if (typeof value === "string") {
       this._sourceAmount = value;
     }
-    this._throttledRefreshExchangeRates();
   }
 
-  private async fetchSynths() {
-    await this._synthsService.fetchSynths();
-    runInAction(() => {
-      this._sourceSynth =
-        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_FROM];
-      this._destSynth =
-        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_TO];
-      this._sourceProxyContract = this._synthsService.getProxyContractForSynth(
-        this._sourceSynth
-      );
-      this._destProxyContract = this._synthsService.getProxyContractForSynth(
-        this._destSynth
-      );
-    });
-  }
-
-  async fetchSourceBalance() {
-    if (!this._sourceProxyContract) {
+  async fetchSourceBalance(): Promise<void> {
+    if (!this._sourceSynth) {
       return;
     }
-    const sourceBalance = await this._sourceProxyContract.balanceOf(
+    const sourceBalance = await this._sourceSynth.contract.balanceOf(
       this._walletStore.address
     );
     runInAction(() => (this._sourceBalance = sourceBalance));
   }
 
-  exchange = async () => {
+  async exchange(): Promise<void> {
     if (!this.sourceSynth || !this.destSynth) {
       return;
     }
@@ -173,7 +143,7 @@ export class ExchangeFormVM {
         this.destSynth,
         this.sourceAmountNumber
       );
-
+      this._clearForm();
       this.onExchangeSuccess?.();
     } catch (err) {
       const message = getErrorMessage(err);
@@ -183,11 +153,9 @@ export class ExchangeFormVM {
     } finally {
       this._isExchangeInProgress = false;
     }
+  }
 
-    await this.fetchSourceBalance();
-  };
-
-  private async _refreshExchangeRates(): Promise<void> {
+  async fetchExchangeRates(): Promise<void> {
     if (!this.destSynth || !this.sourceSynth) {
       return;
     }
@@ -202,11 +170,17 @@ export class ExchangeFormVM {
     });
   }
 
-  private _throttledRefreshExchangeRates = debounce(
-    this._refreshExchangeRates,
-    REFRESH_EXCHANGE_RATE_THROTTLE_TIME,
-    {
-      leading: true,
-    }
-  );
+  private async _fetchSynths(): Promise<void> {
+    await this._synthsService.fetchSynths();
+    runInAction(() => {
+      this._sourceSynth =
+        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_FROM];
+      this._destSynth =
+        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_TO];
+    });
+  }
+
+  private _clearForm(): void {
+    this._sourceAmount = "";
+  }
 }
