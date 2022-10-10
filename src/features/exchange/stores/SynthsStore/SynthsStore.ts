@@ -1,18 +1,18 @@
 import { makeAutoObservable } from "mobx";
 import { singleton } from "tsyringe";
-import { Synth, SynthWithLogo } from "./SynthsStore.types";
-import { keyBy, mapValues } from "lodash";
+import { Synth, SynthUI } from "./SynthsStore.types";
+import { keyBy } from "lodash";
 
 @singleton()
 export class SynthsStore {
   private _synths: Synth[] = [];
 
-  get synthsByName(): Record<string, Synth> {
-    return keyBy(this._synths, (synth) => synth.name);
+  get synthsByName(): Record<string, SynthUI> {
+    return keyBy(this.synths, (synth) => synth.name);
   }
 
-  get synthsWithLogoByName(): Record<string, SynthWithLogo> {
-    return mapValues(this.synthsByName, this._synthToSynthWithLogoUrl);
+  get synths(): SynthUI[] {
+    return this._synths.map(this._synthToSynthUI);
   }
 
   constructor() {
@@ -23,7 +23,7 @@ export class SynthsStore {
     this._synths = synths;
   }
 
-  private _synthToSynthWithLogoUrl(synth: Synth): SynthWithLogo {
+  private _synthToSynthUI(synth: Synth): SynthUI {
     return {
       ...synth,
       logoUrl: `synths/${synth.name}.svg`,

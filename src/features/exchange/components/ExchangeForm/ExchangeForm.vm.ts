@@ -1,19 +1,21 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { inject, injectable } from "tsyringe";
-import { SynthWithLogo, SynthsStore } from "../../stores";
+import { SynthUI, SynthsStore } from "../../stores";
 import { SynthsService } from "../../services";
 import { BigNumber, FixedNumber } from "ethers";
 import { WalletStore } from "../../../wallet/stores";
 import { formatEther } from "ethers/lib/utils";
-import { getErrorMessage, safeParseUnits } from "../../../../shared";
+import { safeParseUnits } from "../../../../shared";
 
 const DEFAULT_SYNTH_FROM = "sUSD";
 const DEFAULT_SYNTH_TO = "sETH";
 
+const EXCHANGE_ERROR_MESSAGE = "An error occured during exchange. Try later.";
+
 @injectable()
 export class ExchangeFormVM {
-  private _sourceSynth?: SynthWithLogo;
-  private _destSynth?: SynthWithLogo;
+  private _sourceSynth?: SynthUI;
+  private _destSynth?: SynthUI;
   private _sourceBalance?: BigNumber;
   private _sourceAmount = "";
   private _sourceExchangeRate?: BigNumber;
@@ -23,11 +25,11 @@ export class ExchangeFormVM {
   onExchangeError?: (message: string) => void;
   onExchangeSuccess?: () => void;
 
-  get sourceSynth(): SynthWithLogo | undefined {
+  get sourceSynth(): SynthUI | undefined {
     return this._sourceSynth;
   }
 
-  get destSynth(): SynthWithLogo | undefined {
+  get destSynth(): SynthUI | undefined {
     return this._destSynth;
   }
 
@@ -83,6 +85,10 @@ export class ExchangeFormVM {
     return this._isExchangeInProgress;
   }
 
+  get synths(): SynthUI[] {
+    return this._synthsStore.synths;
+  }
+
   constructor(
     @inject(SynthsStore) private readonly _synthsStore: SynthsStore,
     @inject(WalletStore) private readonly _walletStore: WalletStore,
@@ -108,6 +114,32 @@ export class ExchangeFormVM {
     await this._fetchSynths();
     await this.fetchSourceBalance();
     await this.fetchExchangeRates();
+  }
+
+  setSourceSynth(value: SynthUI): void {
+    if (value.name === this.sourceSynth?.name) {
+      return;
+    }
+    if (value.name === this.destSynth?.name) {
+      this._destSynth = this._sourceSynth;
+    }
+    this._sourceSynth = value;
+    this._clearForm();
+    this.fetchSourceBalance();
+    this.fetchExchangeRates();
+  }
+
+  setDestSynth(value: SynthUI): void {
+    if (value.name === this.destSynth?.name) {
+      return;
+    }
+    if (value.name === this.sourceSynth?.name) {
+      this._sourceSynth = this.destSynth;
+      this.fetchSourceBalance();
+    }
+    this._destSynth = value;
+    this._clearForm();
+    this.fetchExchangeRates();
   }
 
   setSourceAmount(value: string | BigNumber): void {
@@ -146,10 +178,8 @@ export class ExchangeFormVM {
       this._clearForm();
       this.onExchangeSuccess?.();
     } catch (err) {
-      const message = getErrorMessage(err);
-      if (message) {
-        this.onExchangeError?.(message);
-      }
+      console.error("Exchange method error:", err);
+      this.onExchangeError?.(EXCHANGE_ERROR_MESSAGE);
     } finally {
       this._isExchangeInProgress = false;
     }
@@ -173,10 +203,8 @@ export class ExchangeFormVM {
   private async _fetchSynths(): Promise<void> {
     await this._synthsService.fetchSynths();
     runInAction(() => {
-      this._sourceSynth =
-        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_FROM];
-      this._destSynth =
-        this._synthsStore.synthsWithLogoByName[DEFAULT_SYNTH_TO];
+      this._sourceSynth = this._synthsStore.synthsByName[DEFAULT_SYNTH_FROM];
+      this._destSynth = this._synthsStore.synthsByName[DEFAULT_SYNTH_TO];
     });
   }
 

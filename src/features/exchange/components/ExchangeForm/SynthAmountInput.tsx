@@ -9,16 +9,17 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useIMask } from "../../../../shared";
-import { SynthWithLogo } from "../../stores";
+import { SynthUI } from "../../stores";
 import { BigNumber } from "ethers";
 import { formatEther } from "ethers/lib/utils";
 
 type Props = Omit<React.ComponentProps<typeof InputGroup>, "onChange"> & {
-  synth: SynthWithLogo;
+  synth: SynthUI;
   balance?: BigNumber;
   value?: string;
   readonly?: boolean;
   onChange?: (value: string) => void;
+  onClickSynth?: () => void;
 };
 
 const PLACEHOLDER_SETTINGS = {
@@ -32,6 +33,7 @@ export const SynthAmountInput = ({
   value,
   readonly,
   onChange,
+  onClickSynth,
   ...rest
 }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -97,7 +99,7 @@ export const SynthAmountInput = ({
           height={"100%"}
           pr={1}
         >
-          <Button size="sm" colorScheme={"gray"}>
+          <Button size="sm" colorScheme={"gray"} onClick={onClickSynth}>
             <Avatar size={"xs"} name={synth.name} src={synth.logoUrl} mr={2} />
             {synth.name}
           </Button>

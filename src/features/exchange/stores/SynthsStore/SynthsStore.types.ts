@@ -5,6 +5,6 @@ export type Synth = SynthBase & {
   contract: Contract;
 };
 
-export type SynthWithLogo = Synth & {
+export type SynthUI = Synth & {
   logoUrl: string;
 };

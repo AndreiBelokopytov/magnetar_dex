@@ -1,9 +1,10 @@
-import { Box, Button, Text, useToast } from "@chakra-ui/react";
+import { Box, Button, Text, useBoolean, useToast } from "@chakra-ui/react";
 import { observer } from "mobx-react";
 import { useInjectedInstance, useInterval } from "../../../../shared";
 import { ExchangeFormVM } from "./ExchangeForm.vm";
 import { SynthAmountInput } from "./SynthAmountInput";
 import { useEffect } from "react";
+import { SelectSynthModal } from "../SelectSynthModal";
 
 const REFRESH_EXCHANGE_RATES_INTERVAL = 2 * 60 * 1000;
 const REFRESH_BALANCE_INTERVAL = 60 * 1000;
@@ -11,6 +12,15 @@ const REFRESH_BALANCE_INTERVAL = 60 * 1000;
 export const ExchangeForm = observer(() => {
   const toast = useToast();
   const vm = useInjectedInstance(ExchangeFormVM);
+
+  const [
+    isSelectSourceSynthModalOpen,
+    { on: openSelectSourceSynthModal, off: closeSelectSourceSynthModal },
+  ] = useBoolean(false);
+  const [
+    isSelectDestSynthModalOpen,
+    { on: openSelectDestSynthModal, off: closeSelectDestSynthModal },
+  ] = useBoolean(false);
 
   vm.onExchangeError = (message) =>
     toast({
@@ -56,12 +66,14 @@ export const ExchangeForm = observer(() => {
           synth={vm.sourceSynth}
           balance={vm.sourceBalance}
           onChange={vm.setSourceAmount}
+          onClickSynth={openSelectSourceSynthModal}
           mb={12}
         />
         <SynthAmountInput
           synth={vm.destSynth}
           mb={12}
           value={vm.destAmount}
+          onClickSynth={openSelectDestSynthModal}
           readonly
         />
         <Button
@@ -75,6 +87,18 @@ export const ExchangeForm = observer(() => {
           {vm.formError ?? "Confirm"}
         </Button>
       </Box>
+      <SelectSynthModal
+        synths={vm.synths}
+        isOpen={isSelectSourceSynthModalOpen}
+        onClose={closeSelectSourceSynthModal}
+        onSelectSynth={vm.setSourceSynth}
+      />
+      <SelectSynthModal
+        synths={vm.synths}
+        isOpen={isSelectDestSynthModalOpen}
+        onClose={closeSelectDestSynthModal}
+        onSelectSynth={vm.setDestSynth}
+      />
     </>
   );
 });
