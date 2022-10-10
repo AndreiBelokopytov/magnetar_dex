@@ -1,21 +1,38 @@
 import { Button } from "@chakra-ui/react";
 import { observer } from "mobx-react";
-import { useCallback } from "react";
-import { Address } from "web3-toolkit";
-import { useInjectedInstance, usePersistentValue } from "../../../../shared";
-import { MetaMaskButton } from "./MetaMaskButton";
+import { useEffect } from "react";
+import { Address, MetaMaskOnboardingStatus, useMetaMask } from "web3-toolkit";
+import {
+  useEffectOnce,
+  useInjectedInstance,
+  usePersistentProperty,
+} from "../../../../shared";
 import { WalletButtonVM } from "./WalletButton.vm";
 
 export const WalletButton = observer(() => {
-  const vm = useInjectedInstance(WalletButtonVM);
-  usePersistentValue<string>(vm);
+  const { onboardingState, connect } = useMetaMask();
 
-  const handleMetaMaskConnect = useCallback(
-    (addresses: string[]) => {
-      vm.connectWallet(addresses[0]);
-    },
-    [vm]
-  );
+  const isMetaMaskLoading =
+    onboardingState.status === MetaMaskOnboardingStatus.connecting ||
+    onboardingState.status === MetaMaskOnboardingStatus.onboarding;
+
+  const vm = useInjectedInstance(WalletButtonVM);
+  usePersistentProperty<string>(vm);
+
+  useEffectOnce(() => {
+    if (
+      vm.hasAccount &&
+      onboardingState.status === MetaMaskOnboardingStatus.notConnected
+    ) {
+      connect();
+    }
+  });
+
+  useEffect(() => {
+    if (onboardingState.status === MetaMaskOnboardingStatus.connected) {
+      vm.connectWallet(onboardingState.accounts[0]);
+    }
+  }, [connect, onboardingState.accounts, onboardingState.status, vm]);
 
   if (!vm.isReady) {
     return null;
@@ -28,9 +45,12 @@ export const WalletButton = observer(() => {
     );
   }
   return (
-    <MetaMaskButton
-      title={"Connect wallet"}
-      onConnect={handleMetaMaskConnect}
-    />
+    <Button
+      isLoading={isMetaMaskLoading}
+      loadingText="Connecting"
+      onClick={connect}
+    >
+      {"Connect wallet"}
+    </Button>
   );
 });

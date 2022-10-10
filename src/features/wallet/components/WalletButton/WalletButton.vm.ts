@@ -6,8 +6,9 @@ import { WalletStore } from "../../stores";
 @injectable()
 export class WalletButtonVM implements PersistentValueDelegate<string> {
   private _isReady = false;
+  private _restoredAddress?: string;
 
-  readonly persistencyKey = "address";
+  readonly persistencyKey = "eth_address";
 
   get isReady(): boolean {
     return this._isReady;
@@ -15,6 +16,10 @@ export class WalletButtonVM implements PersistentValueDelegate<string> {
 
   get address(): string | undefined {
     return this._walletStore.address;
+  }
+
+  get hasAccount(): boolean {
+    return !!this._restoredAddress;
   }
 
   constructor(@inject(WalletStore) private readonly _walletStore: WalletStore) {
@@ -29,7 +34,7 @@ export class WalletButtonVM implements PersistentValueDelegate<string> {
 
   restore(address?: string) {
     if (address) {
-      this._walletStore.setAddress(address);
+      this._restoredAddress = address;
     }
     this._isReady = true;
   }

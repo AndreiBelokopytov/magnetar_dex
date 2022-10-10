@@ -8,15 +8,16 @@ export interface PersistentValueDelegate<Value> {
   onValueChange(cb: (value?: Value) => void): Disposer;
 }
 
-export const usePersistentValue = <Value>(
+export const usePersistentProperty = <Value>(
   delegate: PersistentValueDelegate<Value>
 ): void => {
   useEffect(() => {
     const dispose = delegate.onValueChange((value) => {
-      localStorage.setItem(
-        delegate.persistencyKey,
-        value ? JSON.stringify(value) : ""
-      );
+      if (value) {
+        localStorage.setItem(delegate.persistencyKey, JSON.stringify(value));
+      } else {
+        localStorage.removeItem(delegate.persistencyKey);
+      }
     });
     return () => dispose();
   }, [delegate]);

@@ -1,5 +1,6 @@
 export * from "./useAsyncObservable";
 export * from "./useInjectedInstance";
-export * from "./usePersitentValue";
+export * from "./usePersitentProperty";
 export * from "./useIMask";
 export * from "./useInterval";
+export * from "./useEffectOnce";
