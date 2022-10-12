@@ -1,21 +1,25 @@
-import { ChakraProvider, Container, Center, Box } from "@chakra-ui/react";
 import { ExchangeForm } from "./features/exchange";
-import { WalletButton } from "./features/wallet";
-import { defaultTheme } from "./theme";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Portfolio } from "./features/portfolio";
+import { Layout } from "./Layout";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        element: <ExchangeForm />,
+        index: true,
+      },
+      {
+        path: "/portfolio",
+        element: <Portfolio />,
+      },
+    ],
+  },
+]);
 
 export const App = () => {
-  return (
-    <ChakraProvider theme={defaultTheme}>
-      <Container maxW={"392px"}>
-        <Box pt={4} pb={4}>
-          <Center>
-            <WalletButton />
-          </Center>
-        </Box>
-        <Box pt={8}>
-          <ExchangeForm />
-        </Box>
-      </Container>
-    </ChakraProvider>
-  );
+  return <RouterProvider router={router} />;
 };

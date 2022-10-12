@@ -5,7 +5,6 @@ import { ExchangeFormVM } from "./ExchangeForm.vm";
 import { SynthAmountInput } from "./SynthAmountInput";
 import { useEffect } from "react";
 import { SelectSynthModal } from "../SelectSynthModal";
-
 const REFRESH_EXCHANGE_RATES_INTERVAL = 2 * 60 * 1000;
 const REFRESH_BALANCE_INTERVAL = 60 * 1000;
 
@@ -40,13 +39,18 @@ export const ExchangeForm = observer(() => {
 
   useEffect(() => {
     vm.init();
+    return () => vm.dispose();
   }, [vm]);
 
   useInterval(vm.fetchSourceBalance, {
     time: REFRESH_BALANCE_INTERVAL,
     fireImmediately: false,
   });
-  useInterval(vm.fetchExchangeRates, {
+  useInterval(vm.fetchSourceCurrencyRate, {
+    time: REFRESH_EXCHANGE_RATES_INTERVAL,
+    fireImmediately: false,
+  });
+  useInterval(vm.fetchDestCurrencyRate, {
     time: REFRESH_EXCHANGE_RATES_INTERVAL,
     fireImmediately: false,
   });
@@ -64,7 +68,7 @@ export const ExchangeForm = observer(() => {
         <SynthAmountInput
           value={vm.sourceAmount}
           synth={vm.sourceSynth}
-          balance={vm.sourceBalance}
+          balance={vm.sourceSynth.balance}
           onChange={vm.setSourceAmount}
           onClickSynth={openSelectSourceSynthModal}
           mb={12}

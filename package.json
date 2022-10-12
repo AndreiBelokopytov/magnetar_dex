@@ -16,6 +16,7 @@
     "mobx-react": "^7.5.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.4.2",
     "reflect-metadata": "^0.1.13",
     "styled-components": "^5.3.5",
     "synthetix": "^2.77.0-alpha",
