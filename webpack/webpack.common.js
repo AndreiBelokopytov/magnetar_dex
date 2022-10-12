@@ -25,7 +25,7 @@ module.exports = {
       config:
         process.env.NODE_ENV === "production"
           ? path.resolve(__dirname, "../configs/config.prod")
-          : path.resolve(__dirname, "../configs/config"),
+          : path.resolve(__dirname, "../configs/config.dev"),
     },
   },
   module: {
