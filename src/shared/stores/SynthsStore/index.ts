@@ -1,2 +1,2 @@
 export * from "./SynthsStore";
-export * from "./SynthsStore.types";
+export * from "./SynthUI";

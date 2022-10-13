@@ -7,7 +7,7 @@ import {
   safeParseUnits,
   SynthsService,
   SynthsStore,
-  Synth,
+  SynthUI,
 } from "../../../../shared";
 
 const DEFAULT_SOURCE = "sUSD";
@@ -28,11 +28,11 @@ export class ExchangeFormVM {
   onExchangeError?: (message: string) => void;
   onExchangeSuccess?: () => void;
 
-  get sourceSynth(): Synth | undefined {
+  get sourceSynth(): SynthUI | undefined {
     return this._synthsStore.findByName(this._sourceSynthName);
   }
 
-  get destSynth(): Synth | undefined {
+  get destSynth(): SynthUI | undefined {
     return this._synthsStore.findByName(this._destSynthName);
   }
 
@@ -86,7 +86,7 @@ export class ExchangeFormVM {
     return this._isExchangeInProgress;
   }
 
-  get synths(): Synth[] {
+  get synths(): SynthUI[] {
     return this._synthsStore.synths;
   }
 
@@ -211,14 +211,14 @@ export class ExchangeFormVM {
     if (!this.sourceSynth) {
       return;
     }
-    await this._synthsService.fetchExchangeRate(this.sourceSynth);
+    await this._synthsService.fetchCurrencyRate(this.sourceSynth);
   }
 
   async fetchDestCurrencyRate(): Promise<void> {
     if (!this.destSynth) {
       return;
     }
-    await this._synthsService.fetchExchangeRate(this.destSynth);
+    await this._synthsService.fetchCurrencyRate(this.destSynth);
   }
 
   private async _fetchSynths(): Promise<void> {

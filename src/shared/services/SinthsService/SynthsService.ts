@@ -1,7 +1,8 @@
 import { inject, singleton } from "tsyringe";
 import { BigNumber, Contract } from "ethers";
 import { Synthetix, Web3Provider } from "../../providers";
-import { Synth, SynthsStore } from "../../stores";
+import { SynthsStore, SynthUI } from "../../stores";
+import { Synth } from "@synthetixio/contracts-interface";
 
 @singleton()
 export class SynthsService {
@@ -23,36 +24,29 @@ export class SynthsService {
     if (this._synthsStore.synths.length > 0) {
       return;
     }
-    const synths = this._synthetix.synths.map((synth) => ({
-      ...synth,
-      logoUrl: `synths/${synth.name}.svg`,
-      contract: this._getProxyContractBySynthName(synth.name),
-      balance: BigNumber.from(0),
-      currencyRate: BigNumber.from(0),
-    }));
+    const synths = this._synthetix.synths.map((synth) => {
+      const contract = this._getProxyContractForSynth(synth);
+      const synthUI = new SynthUI(synth);
+      synthUI.setContract(contract);
+      return synthUI;
+    });
     this._synthsStore.setSynths(synths);
   }
 
-  async fetchBalance(synth: Synth, address: string): Promise<void> {
+  async fetchBalance(synth: SynthUI, address: string): Promise<void> {
     if (!synth.contract) {
       return;
     }
     const balance = await synth.contract.balanceOf(address);
-    this._synthsStore.update(synth.name, (value) => ({
-      ...value,
-      balance,
-    }));
+    synth.setBalance(balance);
   }
 
-  async fetchExchangeRate(synth: Synth): Promise<void> {
+  async fetchCurrencyRate(synth: SynthUI): Promise<void> {
     const currencyRate =
       await this._synthetix.contracts.ExchangeRates.rateForCurrency(
         this._synthetix.toBytes32(synth.name)
       );
-    this._synthsStore.update(synth.name, (value) => ({
-      ...value,
-      currencyRate,
-    }));
+    synth.setCurrencyRate(currencyRate);
   }
 
   async fetchAllBalances(address: string): Promise<void> {
@@ -63,18 +57,18 @@ export class SynthsService {
 
   async fetchAllExchangeRates(): Promise<void> {
     await Promise.all(
-      this._synthsStore.synths.map((synth) => this.fetchExchangeRate(synth))
+      this._synthsStore.synths.map((synth) => this.fetchCurrencyRate(synth))
     );
   }
 
-  private _getProxyContractBySynthName(name: string): Contract | undefined {
-    const contractName = `Proxys${name.slice(1)}`;
+  private _getProxyContractForSynth(synth: Synth): Contract | undefined {
+    const contractName = `Proxys${synth.name.slice(1)}`;
     return this._synthetix.contracts[contractName];
   }
 
   async exchangeSynths(
-    source: Synth,
-    dest: Synth,
+    source: SynthUI,
+    dest: SynthUI,
     amount: BigNumber
   ): Promise<void> {
     await this._synthetixContract.exchange(

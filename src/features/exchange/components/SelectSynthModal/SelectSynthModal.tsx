@@ -11,10 +11,10 @@ import {
   Text,
 } from "@chakra-ui/react";
 import React, { useCallback, useMemo } from "react";
-import { Synth } from "../../../../shared";
+import { SynthUI } from "../../../../shared";
 
 type Props = Omit<React.ComponentProps<typeof Modal>, "children"> & {
-  synths: Synth[];
+  synths: SynthUI[];
   onSelectSynth?: (name: string) => void;
 };
 
@@ -25,7 +25,7 @@ export const SelectSynthModal = ({
   ...rest
 }: Props) => {
   const handleItemClick = useCallback(
-    (synth: Synth) => {
+    (synth: SynthUI) => {
       onSelectSynth?.(synth.name);
       onClose();
     },

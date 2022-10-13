@@ -1,6 +1,6 @@
 import { makeAutoObservable, reaction } from "mobx";
 import { inject, injectable } from "tsyringe";
-import { SynthsService, SynthsStore, Synth } from "../../../../shared";
+import { SynthsService, SynthsStore, SynthUI } from "../../../../shared";
 import { WalletStore } from "../../../wallet/stores";
 
 type Disposer = () => void;
@@ -9,7 +9,7 @@ type Disposer = () => void;
 export class PortfolioVM {
   private _disposers: Disposer[] = [];
 
-  get synths(): Synth[] {
+  get synths(): SynthUI[] {
     return this._synthsStore.synths;
   }
 

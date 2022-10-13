@@ -1,12 +1,12 @@
 import { makeAutoObservable } from "mobx";
 import { singleton } from "tsyringe";
-import { Synth } from "./SynthsStore.types";
+import { SynthUI } from "./SynthUI";
 
 @singleton()
 export class SynthsStore {
-  private _synths = new Map<string, Synth>();
+  private _synths = new Map<string, SynthUI>();
 
-  get synths(): Synth[] {
+  get synths(): SynthUI[] {
     return [...this._synths.values()];
   }
 
@@ -14,20 +14,11 @@ export class SynthsStore {
     makeAutoObservable(this);
   }
 
-  setSynths(synths: Synth[]) {
+  setSynths(synths: SynthUI[]) {
     this._synths = new Map(synths.map((synth) => [synth.name, synth]));
   }
 
-  findByName(name: string): Synth | undefined {
+  findByName(name: string): SynthUI | undefined {
     return this._synths.get(name);
-  }
-
-  update(name: string, cb: (value: Synth) => Synth): void {
-    const synth = this.findByName(name);
-    if (!synth) {
-      return;
-    }
-    const updatedSynth = cb(synth);
-    this._synths.set(name, updatedSynth);
   }
 }

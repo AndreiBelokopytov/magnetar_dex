@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { useInjectedInstance } from "../../../../shared";
 import { PortfolioVM } from "./Portfolio.vm";
 import {
@@ -22,27 +22,28 @@ export const Portfolio = observer(() => {
     return () => vm.dispose();
   }, [vm]);
 
-  const synths = useMemo(
-    () =>
-      vm.synths.map((synth) => (
-        <Tr key={synth.name}>
-          <Td>
-            <Text>
-              <Avatar
-                verticalAlign={"middle"}
-                name={synth.name}
-                src={synth.logoUrl}
-                size={"sm"}
-                mr={3}
-              />
-              {synth.name}
-            </Text>
-          </Td>
-          <Td>{formatEther(synth.balance)}</Td>
-        </Tr>
-      )),
-    [vm.synths]
-  );
+  const synths = vm.synths.map((synth) => (
+    <Tr key={synth.name}>
+      <Td>
+        <Text>
+          <Avatar
+            verticalAlign={"middle"}
+            name={synth.name}
+            src={synth.logoUrl}
+            size={"sm"}
+            mr={3}
+          />
+          {synth.name}
+        </Text>
+      </Td>
+      <Td>
+        <Text fontSize={"sm"} as="b">{`${synth.currencyPrice.toFixed(
+          2
+        )}$`}</Text>
+        <Text fontSize={"sm"}>{formatEther(synth.balance)}</Text>
+      </Td>
+    </Tr>
+  ));
 
   return (
     <>
