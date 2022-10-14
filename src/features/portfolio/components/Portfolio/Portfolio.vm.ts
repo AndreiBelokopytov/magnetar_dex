@@ -1,6 +1,6 @@
 import { makeAutoObservable, reaction } from "mobx";
 import { inject, injectable } from "tsyringe";
-import { SynthsService, SynthsStore, SynthUI } from "../../../../shared";
+import { SynthService, SynthsStore, SynthUI } from "../../../../shared";
 import { WalletStore } from "../../../wallet/stores";
 
 type Disposer = () => void;
@@ -19,17 +19,14 @@ export class PortfolioVM {
 
   constructor(
     @inject(SynthsStore) private readonly _synthsStore: SynthsStore,
-    @inject(SynthsService) private readonly _synthsService: SynthsService,
+    @inject(SynthService) private readonly _synthService: SynthService,
     @inject(WalletStore) private readonly _wallletStore: WalletStore
   ) {
-    makeAutoObservable<
-      this,
-      "_synthsStore" | "_synthsService" | "_walletStore"
-    >(
+    makeAutoObservable<this, "_synthsStore" | "_synthService" | "_walletStore">(
       this,
       {
         _synthsStore: false,
-        _synthsService: false,
+        _synthService: false,
         _walletStore: false,
       },
       {
@@ -39,15 +36,15 @@ export class PortfolioVM {
   }
 
   async init(): Promise<void> {
-    await this._synthsService.fetchSynths();
-    await this._synthsService.fetchAllExchangeRates();
+    await this._synthService.fetchSynths();
+    await this._synthService.fetchAllExchangeRates();
 
     this._disposers = [
       reaction(
         () => this.address,
         () => {
           if (this.address) {
-            this._synthsService.fetchAllBalances(this.address);
+            this._synthService.fetchAllBalances(this.address);
           }
         },
         {

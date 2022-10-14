@@ -5,7 +5,7 @@ import { SynthsStore, SynthUI } from "../../stores";
 import { Synth } from "@synthetixio/contracts-interface";
 
 @singleton()
-export class SynthsService {
+export class SynthService {
   private readonly _synthetixContract: Contract;
 
   constructor(

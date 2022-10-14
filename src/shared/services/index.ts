@@ -1,1 +1,1 @@
-export * from "./SinthsService";
+export * from "./SinthService";

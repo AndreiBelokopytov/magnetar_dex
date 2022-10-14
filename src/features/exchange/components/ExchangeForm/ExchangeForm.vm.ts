@@ -5,7 +5,7 @@ import { WalletStore } from "../../../wallet/stores";
 import { formatEther } from "ethers/lib/utils";
 import {
   safeParseUnits,
-  SynthsService,
+  SynthService,
   SynthsStore,
   SynthUI,
 } from "../../../../shared";
@@ -97,17 +97,17 @@ export class ExchangeFormVM {
   constructor(
     @inject(SynthsStore) private readonly _synthsStore: SynthsStore,
     @inject(WalletStore) private readonly _walletStore: WalletStore,
-    @inject(SynthsService) private readonly _synthsService: SynthsService
+    @inject(SynthService) private readonly _synthService: SynthService
   ) {
     makeAutoObservable<
       ExchangeFormVM,
-      "_synthsStore" | "_walletStore" | "_synthsService"
+      "_synthsStore" | "_walletStore" | "_synthService"
     >(
       this,
       {
         _synthsStore: false,
         _walletStore: false,
-        _synthsService: false,
+        _synthService: false,
       },
       {
         autoBind: true,
@@ -180,7 +180,7 @@ export class ExchangeFormVM {
     if (!this.sourceSynth || !this.address) {
       return;
     }
-    await this._synthsService.fetchBalance(this.sourceSynth, this.address);
+    await this._synthService.fetchBalance(this.sourceSynth, this.address);
   }
 
   async exchange(): Promise<void> {
@@ -192,7 +192,7 @@ export class ExchangeFormVM {
     }
     this._isExchangeInProgress = true;
     try {
-      await this._synthsService.exchangeSynths(
+      await this._synthService.exchangeSynths(
         this.sourceSynth,
         this.destSynth,
         this.sourceAmountNumber
@@ -211,18 +211,18 @@ export class ExchangeFormVM {
     if (!this.sourceSynth) {
       return;
     }
-    await this._synthsService.fetchCurrencyRate(this.sourceSynth);
+    await this._synthService.fetchCurrencyRate(this.sourceSynth);
   }
 
   async fetchDestCurrencyRate(): Promise<void> {
     if (!this.destSynth) {
       return;
     }
-    await this._synthsService.fetchCurrencyRate(this.destSynth);
+    await this._synthService.fetchCurrencyRate(this.destSynth);
   }
 
   private async _fetchSynths(): Promise<void> {
-    await this._synthsService.fetchSynths();
+    await this._synthService.fetchSynths();
   }
 
   private _clearForm(): void {
