@@ -17,7 +17,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "typeRoots": ["types"],
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": true
   },
   "include": ["src", "types", "webpack", "configs"]
 }
